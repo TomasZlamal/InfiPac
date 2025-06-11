@@ -1,6 +1,7 @@
 # Setting up
-Clone raylib into the libs directory:
+Clone raylib into the libs directory (and create it):
 ```bash
+mkdir libs
 cd libs
 git clone --depth 1 https://github.com/raysan5/raylib.git raylib
 cd raylib/src/
