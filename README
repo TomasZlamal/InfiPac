@@ -1,0 +1,18 @@
+# Setting up
+Clone raylib into the libs directory:
+```bash
+cd libs
+git clone --depth 1 https://github.com/raysan5/raylib.git raylib
+cd raylib/src/
+make PLATFORM=PLATFORM_DESKTOP
+```
+
+Create a build directory for your build files:
+```bash
+mkdir build
+cd build
+cmake .. # optional: add flag -DDEBUG_MODE=ON to turn on debug mode
+cmake --build .
+./Pac
+```
+
