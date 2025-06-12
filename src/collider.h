@@ -11,6 +11,7 @@ protected:
 
 public:
   Collider(std::shared_ptr<RigidBody2D> sptr) : m_rigidbody(sptr) {}
-  virtual bool isColliding(Collider *) = 0;
+  virtual vec2 isColliding(Collider *) = 0;
+  std::shared_ptr<RigidBody2D> getRigidBody() { return m_rigidbody; }
 };
 } // namespace pac

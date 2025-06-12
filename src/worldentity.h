@@ -1,20 +1,25 @@
 #pragma once
+#include "debug.h"
 #include "simplecollidercomponent.h"
 #include <memory>
+#include <optional>
 #include <vector>
 namespace pac {
 
 class Component;
 class WorldEntity {
-  std::vector<Component *> m_components;
+  std::vector<std::unique_ptr<Component>> m_components;
   std::shared_ptr<RigidBody2D> m_rigidbody;
 
 public:
+  WorldEntity(std::shared_ptr<RigidBody2D>);
   void tick();
   template <typename T> T *getComponent() {
-    for (pac::Component *component : m_components) {
-      if (dynamic_cast<T *>(component)) {
-        return dynamic_cast<T *>(component);
+    for (auto &component : m_components) {
+      auto comp_pointer = component.get();
+
+      if (dynamic_cast<T *>(comp_pointer)) {
+        return dynamic_cast<T *>(comp_pointer);
       }
     }
     return 0;

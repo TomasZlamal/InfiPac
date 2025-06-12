@@ -9,15 +9,13 @@ option(DEBUG_MODE "Use debug mode?" OFF)
 target_include_directories(Pac PUBLIC
                            "${PROJECT_BINARY_DIR}")
 
-# libs dir = external libraries
-add_subdirectory(libs/raylib)
-# src dir = internal code
 add_subdirectory(src)
+
 target_link_libraries(Pac PUBLIC raylib)
 target_link_libraries(Pac PUBLIC PacLib)
 target_include_directories(Pac PUBLIC
                           "${PROJECT_BINARY_DIR}"
-                          "${PROJECT_SOURCE_DIR}/libs"
+                          "${PROJECT_SOURCE_DIR}/src/libs"
                           )
 if (DEBUG_MODE)
   target_compile_definitions(Pac PUBLIC "DEBUG_MODE_ON")

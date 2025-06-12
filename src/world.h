@@ -1,4 +1,6 @@
 #pragma once
+#include "libs/raylib/src/raylib.h"
+
 #include "collider.h"
 #include "simplecollidercomponent.h"
 #include "worldentity.h"
@@ -7,13 +9,15 @@
 
 #include <vector>
 namespace pac {
-enum class UserInput { W_KEY, A_KEY, S_KEY, D_KEY };
+enum class UserInput { NONE, W_KEY, A_KEY, S_KEY, D_KEY };
 class World {
   std::vector<WorldEntity *> m_entities;
   void entityLoop();
+  UserInput m_lastinput;
 
 public:
   World();
+  void runWorld();
   void worldLoop();
   void addEntity(WorldEntity *);
   void handleUserInput(UserInput);
