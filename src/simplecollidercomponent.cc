@@ -4,6 +4,7 @@
 namespace pac {
 bool SimpleColliderComponent::isColliding(Collider *collider) {
   if (auto dyn = dynamic_cast<SimpleColliderComponent *>(collider)) {
+    // TODO: Change this to cast the m_rigidbody to a rect
 
     // check if any of the points are inside of the other rectangle
     vec2 points_a[] = {

@@ -26,12 +26,9 @@ void World::entityLoop() {
 }
 void World::worldLoop() {
 
-  while (1) {
-
-    DEBUG_PRINT("LOOPING")
-    entityLoop();
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-  }
+  DEBUG_PRINT("LOOPING")
+  entityLoop();
 }
 void World::addEntity(WorldEntity *entity) { m_entities.push_back(entity); }
+void World::handleUserInput(UserInput input) {}
 } // namespace pac

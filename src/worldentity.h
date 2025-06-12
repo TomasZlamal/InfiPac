@@ -1,10 +1,13 @@
 #pragma once
+#include "simplecollidercomponent.h"
+#include <memory>
 #include <vector>
 namespace pac {
 
 class Component;
 class WorldEntity {
   std::vector<Component *> m_components;
+  std::shared_ptr<RigidBody2D> m_rigidbody;
 
 public:
   void tick();
@@ -28,6 +31,7 @@ public:
   }
   ```
   */
-  void addComponent(Component *component) { m_components.push_back(component); }
+  void addComponent(Component *component);
+  const std::shared_ptr<RigidBody2D> getRigidBody();
 };
 } // namespace pac

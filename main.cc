@@ -26,6 +26,14 @@ int main() {
   // Main game loop
   while (!WindowShouldClose()) // Detect window close button or ESC key
   {
+    if (IsKeyDown(KEY_W))
+      world.handleUserInput(pac::UserInput::W_KEY);
+    if (IsKeyDown(KEY_LEFT))
+      ballPosition.x -= 2.0f;
+    if (IsKeyDown(KEY_UP))
+      ballPosition.y -= 2.0f;
+    if (IsKeyDown(KEY_DOWN))
+      ballPosition.y += 2.0f;
     // Update
     //----------------------------------------------------------------------------------
     // TODO: Update your variables here
