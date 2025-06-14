@@ -9,6 +9,8 @@ namespace pac {
 class Component;
 class WorldEntity {
   std::vector<std::unique_ptr<Component>> m_components;
+
+protected:
   std::shared_ptr<RigidBody2D> m_rigidbody;
 
 public:
