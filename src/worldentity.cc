@@ -1,10 +1,11 @@
 #include "worldentity.h"
 #include "simplecollidercomponent.h"
+#include "utils.h"
 #include <memory>
 
 namespace pac {
 WorldEntity::WorldEntity(std::shared_ptr<RigidBody2D> sp) { m_rigidbody = sp; }
-void WorldEntity::tick() {}
+int WorldEntity::type() { return pac::NORMAL; }
 void WorldEntity::addComponent(Component *component)
 // namespace pac
 {

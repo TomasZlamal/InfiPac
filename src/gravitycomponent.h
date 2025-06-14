@@ -11,5 +11,6 @@ public:
   GravityComponent(std::shared_ptr<RigidBody2D> rb, vec2 g)
       : m_rb(rb), m_g(g) {}
   vec2 getMove();
+  void setGravity(vec2);
 };
 } // namespace pac

@@ -13,13 +13,14 @@ namespace pac {
 enum class UserInput { W_KEY, A_KEY, S_KEY, D_KEY, SPACE_KEY };
 class World {
   std::vector<WorldEntity *> m_entities;
-  void entityLoop();
   std::queue<UserInput> m_inputs;
   vec2 posLocation(vec2 rb);
   void tryMoveRigidBody(std::shared_ptr<RigidBody2D> rb, vec2 factor);
   int m_screenheight;
   int m_screenwidth;
   int m_score;
+  void onPlayerDeath();
+  void entityLoop();
 
 public:
   World(int, int);

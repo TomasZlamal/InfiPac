@@ -6,7 +6,6 @@
 #include <vector>
 namespace pac {
 
-class Component;
 class WorldEntity {
   std::vector<std::unique_ptr<Component>> m_components;
 
@@ -15,7 +14,7 @@ protected:
 
 public:
   WorldEntity(std::shared_ptr<RigidBody2D>);
-  void tick();
+  virtual int type();
   template <typename T> T *getComponent() {
     for (auto &component : m_components) {
       auto comp_pointer = component.get();
