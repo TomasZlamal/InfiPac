@@ -21,6 +21,9 @@ class World {
   int m_score;
   void onPlayerDeath();
   void entityLoop();
+  void setupWindow();
+  void endWindow();
+  void setupEntities();
 
 public:
   World(int, int);

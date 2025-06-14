@@ -1,0 +1,19 @@
+#include "simpleaicomponent.h"
+#include "debug.h"
+#include "playercomponent.h"
+#include <cstdlib>
+namespace pac {
+vec2 SimpleAIComponent::getMove(const std::vector<WorldEntity *> &m_entities) {
+  for (auto entity : m_entities) {
+    if (entity->getComponent<PlayerComponent>()) {
+      vec2 temp = entity->getRigidBody()->pos - m_rb->pos;
+      if ((rand() % 100) > 98) {
+        return temp / ((float)(rand() % 6 / anger) + 3.0f); //- vec2{50, 50};
+      }
+      float total = std::abs(temp.x) + std::abs(temp.y);
+      return vec2{temp.x / total, temp.y / total} / 2.0f * anger;
+    }
+  }
+  return {};
+}
+} // namespace pac

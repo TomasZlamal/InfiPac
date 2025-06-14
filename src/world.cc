@@ -10,7 +10,9 @@
 #include "rectanglerenderer.h"
 #include "renderer.h"
 #include "rigidbody.h"
+#include "simpleaicomponent.h"
 #include "utils.h"
+#include "worldentity.h"
 #include <endian.h>
 #include <memory>
 #include <string>
@@ -19,14 +21,17 @@ namespace pac {
 World::World(int height, int width)
     : m_screenheight(height), m_screenwidth(width), m_score(0) {}
 void World::onPlayerDeath() {
-  int n = 0;
+  /*int n = 0;
   for (WorldEntity *entity : m_entities) {
     auto pc = entity->getComponent<PlayerComponent>();
     if (pc) {
       m_entities.erase(m_entities.begin() + n);
     }
     ++n;
-  }
+  }*/
+  m_score = 0;
+  m_entities.clear();
+  setupEntities();
 }
 void World::entityLoop() {
   int m = -1;
@@ -37,17 +42,51 @@ void World::entityLoop() {
     auto scc = entity->getComponent<pac::SimpleColliderComponent>();
     auto pc = entity->getComponent<PlayerComponent>();
     auto rr = entity->getComponent<Renderer>();
-    if (rr) {
+    auto simpleai = entity->getComponent<SimpleAIComponent>();
 
+    std::shared_ptr<RigidBody2D> rb = entity->getRigidBody();
+    if (simpleai) {
+      tryMoveRigidBody(rb, simpleai->getMove(m_entities));
+      simpleai->add_anger(0.025f);
+    }
+    if (rr) {
       rr->render();
     }
     auto gravity = entity->getComponent<pac::GravityComponent>();
 
-    std::shared_ptr<RigidBody2D> rb = entity->getRigidBody();
     if (gravity) {
       DEBUG_PRINT("EWREW")
       tryMoveRigidBody(rb, gravity->getMove());
     }
+    if (pc) {
+      constexpr float move_factor = 2.5;
+      while (!m_inputs.empty()) {
+        auto input = m_inputs.front();
+        m_inputs.pop();
+        switch (input) {
+        case pac::UserInput::W_KEY: {
+          // rb->pos = rb->pos + vec2{0, -move_factor};
+          tryMoveRigidBody(rb, vec2{0, -move_factor});
+        } break;
+        case pac::UserInput::A_KEY: {
+          // rb->pos = rb->pos + vec2{-move_factor, 0};
+          tryMoveRigidBody(rb, vec2{-move_factor, 0});
+        } break;
+        case pac::UserInput::S_KEY: {
+          // rb->pos = rb->pos + vec2{0, move_factor};
+          tryMoveRigidBody(rb, vec2{0, move_factor});
+        } break;
+        case pac::UserInput::D_KEY: {
+          // rb->pos = rb->pos + vec2{move_factor, 0};
+          tryMoveRigidBody(rb, vec2{move_factor, 0});
+        } break;
+
+        default:
+          break;
+        }
+      }
+    }
+
     if (scc) {
       int n = -1;
       for (WorldEntity *entity_b : m_entities) {
@@ -137,79 +176,55 @@ void World::entityLoop() {
       skip_elem = 0;
       continue;
     }
-
-    if (pc) {
-      constexpr float move_factor = 1;
-      while (!m_inputs.empty()) {
-        auto input = m_inputs.front();
-        m_inputs.pop();
-        switch (input) {
-        case pac::UserInput::W_KEY: {
-          // rb->pos = rb->pos + vec2{0, -move_factor};
-          tryMoveRigidBody(rb, vec2{0, -move_factor});
-        } break;
-        case pac::UserInput::A_KEY: {
-          // rb->pos = rb->pos + vec2{-move_factor, 0};
-          tryMoveRigidBody(rb, vec2{-move_factor, 0});
-        } break;
-        case pac::UserInput::S_KEY: {
-          // rb->pos = rb->pos + vec2{0, move_factor};
-          tryMoveRigidBody(rb, vec2{0, move_factor});
-        } break;
-        case pac::UserInput::D_KEY: {
-          // rb->pos = rb->pos + vec2{move_factor, 0};
-          tryMoveRigidBody(rb, vec2{move_factor, 0});
-        } break;
-
-        default:
-          break;
-        }
-      }
-    }
   }
   if (player_killed) {
     onPlayerDeath();
   }
 }
-void World::worldLoop() { entityLoop(); }
-void World::addEntity(WorldEntity *entity) { m_entities.push_back(entity); }
-void World::handleUserInput(UserInput input) { m_inputs.push(input); }
-void World::runWorld() {
+void World::setupEntities() {
   auto w1rb = std::shared_ptr<pac::RectangleRigidBody>(
       new pac::RectangleRigidBody({pac::vec2{30, 30}, pac::vec2{1, 2}, 5}));
-  auto w2rb = std::shared_ptr<pac::RectangleRigidBody>(
-      new pac::RectangleRigidBody({pac::vec2{50, 50}, pac::vec2{100, 200}, 5}));
+  auto w2rb =
+      std::shared_ptr<pac::RectangleRigidBody>(new pac::RectangleRigidBody(
+          {pac::vec2{50, 200}, pac::vec2{100, 200}, 5}));
 
-  pac::WorldEntity we1{w1rb}, we2{w2rb};
-  pac::ImmovableRect ir1{{200, 100}, {300, 300}};
-  pac::ImmovableRect ir2{{200, 100}, {300, 100}};
+  pac::WorldEntity *we1 = new WorldEntity{w1rb}, *we2 = new WorldEntity{w2rb};
+  pac::ImmovableRect *ir1 = new ImmovableRect{{200, 100}, {300, 300}};
+  pac::ImmovableRect *ir2 = new ImmovableRect{{200, 100}, {300, 100}};
 
-  pac::ImmovableRect ir3{{50, 50}, {300, 150}, RED};
-  ir3.addComponent(new InstaKillComponent());
-  pac::ImmovableRect ir4{{50, 50}, {300, 250}, RED};
-  ir4.addComponent(new InstaKillComponent());
+  pac::ImmovableRect *ir3 = new ImmovableRect{{50, 50}, {300, 150}, RED};
+  ir3->addComponent(new InstaKillComponent());
+  pac::ImmovableRect *ir5 = new ImmovableRect{{30, 30}, {200, 200}, RED};
 
-  pac::PelletEntity p1{{20, 20}, {300, 200}};
+  ir5->addComponent(new InstaKillComponent());
+  pac::ImmovableRect *ir4 = new ImmovableRect{{50, 50}, {300, 250}, RED};
+  ir4->addComponent(new InstaKillComponent());
+  pac::ImmovableRect *enemy = new ImmovableRect{{30, 30}, {400, 400}, RED};
+  enemy->addComponent(new SimpleAIComponent(enemy->getRigidBody()));
+  enemy->addComponent(new InstaKillComponent());
 
-  we1.addComponent(new pac::SimpleColliderComponent(w1rb));
-  we2.addComponent(new pac::SimpleColliderComponent(w2rb));
+  pac::PelletEntity *p1 = new PelletEntity{{20, 20}, {300, 200}};
 
-  we2.addComponent(new pac::RectangleRenderer(w2rb));
-  we1.addComponent(new pac::PlayerComponent());
-  we1.addComponent(new pac::RectangleRenderer(w1rb, YELLOW));
+  we1->addComponent(new pac::SimpleColliderComponent(w1rb));
+  we2->addComponent(new pac::SimpleColliderComponent(w2rb));
+
+  we2->addComponent(new pac::RectangleRenderer(w2rb));
+  we1->addComponent(new pac::PlayerComponent());
+  we1->addComponent(new pac::RectangleRenderer(w1rb, YELLOW));
   // ir2.addComponent(new GravityComponent(w2rb, vec2{0, 2}));
-  we2.addComponent(new pac::GravityComponent(w2rb, vec2{0, 0.5f}));
-  this->addEntity(&we1);
-  this->addEntity(&we2);
-  this->addEntity(&ir1);
-  this->addEntity(&ir2);
-  this->addEntity(&ir3);
-  this->addEntity(&ir4);
-  this->addEntity(&p1);
-
-  InitWindow(m_screenwidth, m_screenheight, "Pac");
-
-  SetTargetFPS(60); // Set our game to run at 60 frames-per-second
+  // we2->addComponent(new pac::GravityComponent(w2rb, vec2{0.5f, 0.5f}));
+  this->addEntity(we1);
+  this->addEntity(we2);
+  this->addEntity(ir1);
+  this->addEntity(ir2);
+  this->addEntity(ir3);
+  this->addEntity(ir4);
+  this->addEntity(ir5);
+  this->addEntity(p1);
+  this->addEntity(enemy);
+}
+void World::worldLoop() {
+  // Set our game to run at 60 frames-per-second
   //--------------------------------------------------------------------------------------
   // Main game loop
   while (!WindowShouldClose()) // Detect window close button or ESC key
@@ -238,17 +253,32 @@ void World::runWorld() {
 
     ClearBackground(BLACK);
 
-    worldLoop();
+    entityLoop();
     DrawText((std::string("Score: ") + std::to_string(m_score)).c_str(), 190,
              200, 20, LIGHTGRAY);
 
     EndDrawing();
     //----------------------------------------------------------------------------------
   }
-
+}
+void World::addEntity(WorldEntity *entity) { m_entities.push_back(entity); }
+void World::handleUserInput(UserInput input) { m_inputs.push(input); }
+void World::runWorld() {
+  setupWindow();
+  setupEntities();
+  worldLoop();
+  endWindow();
   // De-Initialization
   //--------------------------------------------------------------------------------------
+}
+
+void World::endWindow() {
   CloseWindow(); // Close window and OpenGL context
+}
+void World::setupWindow() {
+  InitWindow(m_screenwidth, m_screenheight, "Pac");
+
+  SetTargetFPS(60);
 }
 
 vec2 World::posLocation(vec2 rb) {
