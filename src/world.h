@@ -7,17 +7,19 @@
 
 #include "debug.h"
 
+#include <queue>
 #include <vector>
 namespace pac {
-enum class UserInput { NONE, W_KEY, A_KEY, S_KEY, D_KEY };
+enum class UserInput { W_KEY, A_KEY, S_KEY, D_KEY, SPACE_KEY };
 class World {
   std::vector<WorldEntity *> m_entities;
   void entityLoop();
-  UserInput m_lastinput;
+  std::queue<UserInput> m_inputs;
   vec2 posLocation(vec2 rb);
   void tryMoveRigidBody(std::shared_ptr<RigidBody2D> rb, vec2 factor);
   int m_screenheight;
   int m_screenwidth;
+  int m_score;
 
 public:
   World(int, int);
