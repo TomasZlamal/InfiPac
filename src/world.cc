@@ -3,6 +3,7 @@
 #include "gravitycomponent.h"
 #include "immovablerect.h"
 #include "instakillcomponent.h"
+#include "learningaicomponent.h"
 #include "libs/raylib/src/raylib.h"
 #include "pelletcomponent.h"
 #include "pelletentity.h"
@@ -30,11 +31,18 @@ void World::onPlayerDeath() {
     ++n;
   }*/
   m_score = 0;
+  if (m_ai_score < 0) {
+    m_ai.reset();
+  } else {
+    // TODO: Do LEARNING HERE
+  }
+  m_ai_score = m_ai_baseline_score;
   m_entities.clear();
   setupEntities();
 }
 void World::entityLoop() {
   int m = -1;
+  const int pellet_factor = 300;
   bool skip_elem = 0;
   bool player_killed = 0;
   for (WorldEntity *entity : m_entities) {
@@ -43,19 +51,37 @@ void World::entityLoop() {
     auto pc = entity->getComponent<PlayerComponent>();
     auto rr = entity->getComponent<Renderer>();
     auto simpleai = entity->getComponent<SimpleAIComponent>();
-
+    auto learningai = entity->getComponent<LearningAIComponent>();
     std::shared_ptr<RigidBody2D> rb = entity->getRigidBody();
     if (simpleai) {
       tryMoveRigidBody(rb, simpleai->getMove(m_entities));
       simpleai->add_anger(0.025f);
     }
+
+    if (learningai) {
+      vec2 f = learningai->getMove(m_entities);
+      tryMoveRigidBody(rb, f);
+      for (WorldEntity *entity_b : m_entities) {
+        auto pl = entity_b->getComponent<PlayerComponent>();
+        if (pl) {
+          vec2 diff = entity_b->getRigidBody()->pos - rb->pos;
+          diff.abs();
+          float reward = ((m_screenwidth - diff.x) / m_screenwidth +
+                          (m_screenheight - diff.y) / m_screenheight);
+          if (reward > 0) {
+            m_ai_score += reward;
+          }
+        }
+      }
+    }
+
     if (rr) {
       rr->render();
     }
     auto gravity = entity->getComponent<pac::GravityComponent>();
 
     if (gravity) {
-      DEBUG_PRINT("EWREW")
+      // DEBUG_PRINT("EWREW")
       tryMoveRigidBody(rb, gravity->getMove());
     }
     if (pc) {
@@ -112,6 +138,8 @@ void World::entityLoop() {
                 m_entities.erase(m_entities.begin() + n);
                 --n;
                 m_score++;
+
+                m_ai_score -= pellet_factor;
                 continue;
               }
 
@@ -131,6 +159,7 @@ void World::entityLoop() {
                 m_entities.erase(m_entities.begin() + m);
                 --m;
                 m_score++;
+                m_ai_score -= pellet_factor;
                 skip_elem = 1;
                 break;
               }
@@ -199,10 +228,19 @@ void World::setupEntities() {
   ir5->addComponent(new InstaKillComponent());
   pac::ImmovableRect *ir4 = new ImmovableRect{{50, 50}, {300, 250}, RED};
   ir4->addComponent(new InstaKillComponent());
-  pac::ImmovableRect *enemy = new ImmovableRect{{30, 30}, {400, 400}, RED};
+  /*pac::ImmovableRect *enemy = new ImmovableRect{{30, 30}, {400, 400}, RED};
   enemy->addComponent(new SimpleAIComponent(enemy->getRigidBody()));
+  enemy->addComponent(new InstaKillComponent());*/
+  pac::ImmovableRect *enemy = new ImmovableRect{{30, 30}, {400, 400}, RED};
   enemy->addComponent(new InstaKillComponent());
-
+  if (!m_ai) {
+    enemy->addComponent(new LearningAIComponent(enemy->getRigidBody(),
+                                                m_screenwidth, m_screenheight));
+    m_ai = std::shared_ptr<LearningAIComponent>(
+        enemy->getComponent<LearningAIComponent>());
+  } else {
+    enemy->addComponent(m_ai.get());
+  }
   pac::PelletEntity *p1 = new PelletEntity{{20, 20}, {300, 200}};
 
   we1->addComponent(new pac::SimpleColliderComponent(w1rb));
@@ -211,8 +249,11 @@ void World::setupEntities() {
   we2->addComponent(new pac::RectangleRenderer(w2rb));
   we1->addComponent(new pac::PlayerComponent());
   we1->addComponent(new pac::RectangleRenderer(w1rb, YELLOW));
-  // ir2.addComponent(new GravityComponent(w2rb, vec2{0, 2}));
-  // we2->addComponent(new pac::GravityComponent(w2rb, vec2{0.5f, 0.5f}));
+  // ir2.addComponent(new
+  // GravityComponent(w2rb, vec2{0,
+  // 2})); we2->addComponent(new
+  // pac::GravityComponent(w2rb,
+  // vec2{0.5f, 0.5f}));
   this->addEntity(we1);
   this->addEntity(we2);
   this->addEntity(ir1);
@@ -256,6 +297,9 @@ void World::worldLoop() {
     entityLoop();
     DrawText((std::string("Score: ") + std::to_string(m_score)).c_str(), 190,
              200, 20, LIGHTGRAY);
+
+    DrawText((std::string("AI Score: ") + std::to_string(m_ai_score)).c_str(),
+             0, 0, 20, LIGHTGRAY);
 
     EndDrawing();
     //----------------------------------------------------------------------------------

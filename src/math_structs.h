@@ -3,6 +3,12 @@
 namespace pac {
 struct vec2 {
   float x, y;
+  void abs() {
+    if (x < 0)
+      x = -x;
+    if (y < 0)
+      y = -y;
+  }
   vec2 operator/(const vec2 &a) { return {x / a.x, y / a.y}; }
 
   vec2 operator+(const vec2 &a) { return vec2{x + a.x, y + a.y}; }

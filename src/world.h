@@ -5,6 +5,8 @@
 #include "simplecollidercomponent.h"
 #include "worldentity.h"
 
+#include "learningaicomponent.h"
+
 #include "debug.h"
 
 #include <queue>
@@ -19,6 +21,10 @@ class World {
   int m_screenheight;
   int m_screenwidth;
   int m_score;
+  const int m_ai_baseline_score = 200;
+
+  int m_ai_score = m_ai_baseline_score;
+  std::shared_ptr<LearningAIComponent> m_ai;
   void onPlayerDeath();
   void entityLoop();
   void setupWindow();
